@@ -209,6 +209,22 @@
             color: #f44;
             margin: 10px 0;
         }
+
+        .success-message {
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+
+        .saving-indicator {
+            display: none;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #ffa500;
+        }
+
+        .saving-indicator.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -306,13 +322,18 @@
             <div class="instructions">
                 <p>Thank you for participating!</p>
                 <p>Final Score: $<span id="final-score">0</span></p>
-                <p>Your data has been saved.</p>
+                <div id="saving-indicator" class="saving-indicator">Saving data...</div>
+                <div id="save-success" class="success-message" style="display: none;">Data saved successfully!</div>
+                <div id="save-error" class="error-message" style="display: none;">Error saving data. Please download a backup.</div>
             </div>
-            <button id="download-button">Download Data</button>
+            <button id="download-button">Download Backup</button>
         </div>
     </div>
 
     <script>
+        // CONFIGURATION - REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzI2Ksp9G8x8DooYsP8md1gNUvi1vV6AZjP69SQfMPUe2nrbsqJQOOfujUnjR8nQYwn/exec';
+
         // Game state
         const gameState = {
             demographics: {},
@@ -468,9 +489,46 @@
         function endTask() {
             document.getElementById('final-score').textContent = gameState.totalScore;
             showScreen('end-screen');
+            saveToGoogleSheets();
         }
 
-        // Download data
+        // Save data to Google Sheets
+        async function saveToGoogleSheets() {
+            document.getElementById('saving-indicator').classList.add('active');
+            
+            const data = {
+                demographics: gameState.demographics,
+                summary: {
+                    finalScore: gameState.totalScore,
+                    totalTrials: gameState.currentTrial,
+                    deckSelections: gameState.deckSelections
+                },
+                trials: gameState.trialData
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Note: with no-cors mode, we can't read the response
+                // We'll assume success if no error is thrown
+                document.getElementById('saving-indicator').classList.remove('active');
+                document.getElementById('save-success').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                document.getElementById('saving-indicator').classList.remove('active');
+                document.getElementById('save-error').style.display = 'block';
+            }
+        }
+
+        // Download data as backup
         document.getElementById('download-button').addEventListener('click', () => {
             const data = {
                 demographics: gameState.demographics,

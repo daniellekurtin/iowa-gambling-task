@@ -279,7 +279,7 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
             <div class="trial-info">
-                Trial: <span id="trial-number">1</span> / 40
+                Trial: <span id="trial-number">1</span> / 5
             </div>
             
             <div class="game-area">
@@ -440,8 +440,8 @@
             const deckName = deckNames[deckIndex];
             const selectionCount = gameState.deckSelections[deckIndex];
             
-            const win = schedules[deckName].wins[selectionCount % 40];
-            const loss = schedules[deckName].losses[selectionCount % 40];
+            const win = schedules[deckName].wins[selectionCount % 5];
+            const loss = schedules[deckName].losses[selectionCount % 5];
             const net = win + loss;
             
             gameState.deckSelections[deckIndex]++;
@@ -477,7 +477,7 @@
                 document.getElementById('fixation').style.display = 'block';
                 
                 setTimeout(() => {
-                    if (gameState.currentTrial < 40) {
+                    if (gameState.currentTrial < 5) {
                         startTrial();
                     } else {
                         endTask();

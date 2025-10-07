@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iowa Gambling Task</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .screen {
+            display: none;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .form-group {
+            margin: 20px 0;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .instructions {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .instructions ul {
+            margin: 20px 0;
+            padding-left: 40px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+        }
+
+        .game-area {
+            margin: 40px 0;
+        }
+
+        .decks-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .deck {
+            width: 120px;
+            height: 160px;
+            background-color: #666;
+            border: 4px solid #666;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .deck.marked {
+            border-color: #999;
+            background-color: #555;
+        }
+
+        .deck.selected {
+            border-color: #ccc;
+            background-color: #777;
+        }
+
+        .deck-shape {
+            width: 60px;
+            height: 60px;
+        }
+
+        .deck-shape.square {
+            background-color: #c44;
+        }
+
+        .deck-shape.circle {
+            background-color: #c44;
+            border-radius: 50%;
+        }
+
+        .deck-shape.blue-square {
+            background-color: #44c;
+        }
+
+        .deck-shape.blue-circle {
+            background-color: #44c;
+            border-radius: 50%;
+        }
+
+        .deck-label {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .feedback {
+            margin: 30px 0;
+            font-size: 1.5em;
+        }
+
+        .win {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .loss {
+            color: #f44;
+            font-weight: bold;
+        }
+
+        .total {
+            color: #bbb;
+            margin-top: 10px;
+        }
+
+        .trial-info {
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #aaa;
+        }
+
+        .controls {
+            margin: 30px 0;
+            font-size: 1.1em;
+        }
+
+        .controls p {
+            margin: 10px 0;
+        }
+
+        .fixation {
+            font-size: 4em;
+            margin: 100px 0;
+        }
+
+        .error-message {
+            color: #f44;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Demographics Screen -->
+        <div id="demographics-screen" class="screen active">
+            <h1>Iowa Gambling Task</h1>
+            <div class="instructions">
+                <p>Welcome! Before we begin, please provide some basic information:</p>
+            </div>
+            <form id="demographics-form">
+                <div class="form-group">
+                    <label for="participant-name">Name (or ID):</label>
+                    <input type="text" id="participant-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="participant-age">Age:</label>
+                    <input type="number" id="participant-age" min="18" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="participant-sex">Sex:</label>
+                    <select id="participant-sex" required>
+                        <option value="">Select...</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="prefer-not-to-say">Prefer not to say</option>
+                    </select>
+                </div>
+                <div id="demo-error" class="error-message"></div>
+                <button type="submit">Continue</button>
+            </form>
+        </div>
+
+        <!-- Instructions Screen -->
+        <div id="instructions-screen" class="screen">
+            <h1>Instructions</h1>
+            <div class="instructions">
+                <p>In this task, you will select cards from four different decks to maximize your winnings.</p>
+                <ul>
+                    <li><strong>Goal:</strong> Win as much money as possible</li>
+                    <li><strong>How to play:</strong> Click on a deck to select it</li>
+                    <li>Each card selection will result in a win and possibly a loss</li>
+                    <li>Some decks are better than others in the long run</li>
+                    <li>You will play 40 trials</li>
+                </ul>
+                <p>Click "Start" when you're ready to begin.</p>
+            </div>
+            <button id="start-button">Start Task</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="trial-info">
+                Trial: <span id="trial-number">1</span> / 40
+            </div>
+            
+            <div class="game-area">
+                <div class="decks-container">
+                    <div class="deck" data-deck="0">
+                        <div class="deck-shape square"></div>
+                        <div class="deck-label">Deck A</div>
+                    </div>
+                    <div class="deck" data-deck="1">
+                        <div class="deck-shape blue-square"></div>
+                        <div class="deck-label">Deck B</div>
+                    </div>
+                    <div class="deck" data-deck="2">
+                        <div class="deck-shape circle"></div>
+                        <div class="deck-label">Deck C</div>
+                    </div>
+                    <div class="deck" data-deck="3">
+                        <div class="deck-shape blue-circle"></div>
+                        <div class="deck-label">Deck D</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <p>Click on a deck to select it</p>
+                </div>
+            </div>
+
+            <div id="feedback-area" class="feedback" style="display: none;">
+                <div class="win">Win: $<span id="win-amount">0</span></div>
+                <div class="loss">Loss: $<span id="loss-amount">0</span></div>
+                <div class="total">Total: $<span id="total-amount">0</span></div>
+            </div>
+
+            <div id="fixation" class="fixation" style="display: none;">+</div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="screen">
+            <h1>Task Complete!</h1>
+            <div class="instructions">
+                <p>Thank you for participating!</p>
+                <p>Final Score: $<span id="final-score">0</span></p>
+                <p>Your data has been saved.</p>
+            </div>
+            <button id="download-button">Download Data</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            demographics: {},
+            currentTrial: 0,
+            totalScore: 0,
+            trialData: [],
+            startTime: null,
+            trialStartTime: null,
+            deckSelections: [0, 0, 0, 0]
+        };
+
+        // Win/loss schedules (simplified version - you can replace with your CSV data)
+        const schedules = {
+            deckA: {
+                wins: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
+                losses: [0, 0, -150, 0, -300, 0, 0, -200, 0, -250, -350, 0, 0, -250, -200, 0, 0, -300, -150, 0, -250, -200, 0, 0, -350, 0, -200, -300, 0, 0, -250, 0, 0, -200, -150, 0, -300, 0, -350, -250]
+            },
+            deckB: {
+                wins: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
+                losses: [0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250]
+            },
+            deckC: {
+                wins: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
+                losses: [0, 0, -50, 0, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0]
+            },
+            deckD: {
+                wins: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
+                losses: [0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0]
+            }
+        };
+
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Demographics form
+        document.getElementById('demographics-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('participant-name').value.trim();
+            const age = document.getElementById('participant-age').value;
+            const sex = document.getElementById('participant-sex').value;
+
+            if (!name || !age || !sex) {
+                document.getElementById('demo-error').textContent = 'Please fill in all fields';
+                return;
+            }
+
+            gameState.demographics = {
+                name: name,
+                age: parseInt(age),
+                sex: sex,
+                timestamp: new Date().toISOString()
+            };
+
+            showScreen('instructions-screen');
+        });
+
+        // Start button
+        document.getElementById('start-button').addEventListener('click', () => {
+            gameState.startTime = Date.now();
+            showScreen('game-screen');
+            startTrial();
+        });
+
+        // Deck selection
+        document.querySelectorAll('.deck').forEach(deck => {
+            deck.addEventListener('click', () => {
+                if (deck.classList.contains('selected')) return;
+                selectDeck(parseInt(deck.dataset.deck));
+            });
+        });
+
+        function startTrial() {
+            gameState.currentTrial++;
+            gameState.trialStartTime = Date.now();
+            
+            document.getElementById('trial-number').textContent = gameState.currentTrial;
+            document.getElementById('feedback-area').style.display = 'none';
+            document.getElementById('fixation').style.display = 'none';
+            
+            // Enable deck selection
+            document.querySelectorAll('.deck').forEach(d => {
+                d.classList.remove('selected');
+                d.style.pointerEvents = 'auto';
+            });
+        }
+
+        function selectDeck(deckIndex) {
+            const rt = Date.now() - gameState.trialStartTime;
+            
+            // Disable further selections
+            document.querySelectorAll('.deck').forEach(d => {
+                d.style.pointerEvents = 'none';
+            });
+
+            // Mark selected deck
+            const selectedDeck = document.querySelector(`[data-deck="${deckIndex}"]`);
+            selectedDeck.classList.add('selected');
+
+            // Get outcome
+            const deckNames = ['deckA', 'deckB', 'deckC', 'deckD'];
+            const deckName = deckNames[deckIndex];
+            const selectionCount = gameState.deckSelections[deckIndex];
+            
+            const win = schedules[deckName].wins[selectionCount % 40];
+            const loss = schedules[deckName].losses[selectionCount % 40];
+            const net = win + loss;
+            
+            gameState.deckSelections[deckIndex]++;
+            gameState.totalScore += net;
+
+            // Record trial data
+            gameState.trialData.push({
+                trial: gameState.currentTrial,
+                deckSelected: deckIndex + 1,
+                rt: rt,
+                win: win,
+                loss: loss,
+                net: net,
+                totalScore: gameState.totalScore,
+                timestamp: Date.now() - gameState.startTime
+            });
+
+            // Show feedback after brief delay
+            setTimeout(() => {
+                showFeedback(win, loss, gameState.totalScore);
+            }, 500);
+        }
+
+        function showFeedback(win, loss, total) {
+            document.getElementById('win-amount').textContent = win;
+            document.getElementById('loss-amount').textContent = Math.abs(loss);
+            document.getElementById('total-amount').textContent = total;
+            document.getElementById('feedback-area').style.display = 'block';
+
+            // Show fixation and move to next trial or end
+            setTimeout(() => {
+                document.getElementById('feedback-area').style.display = 'none';
+                document.getElementById('fixation').style.display = 'block';
+                
+                setTimeout(() => {
+                    if (gameState.currentTrial < 40) {
+                        startTrial();
+                    } else {
+                        endTask();
+                    }
+                }, 1000);
+            }, 2500);
+        }
+
+        function endTask() {
+            document.getElementById('final-score').textContent = gameState.totalScore;
+            showScreen('end-screen');
+        }
+
+        // Download data
+        document.getElementById('download-button').addEventListener('click', () => {
+            const data = {
+                demographics: gameState.demographics,
+                summary: {
+                    finalScore: gameState.totalScore,
+                    totalTrials: gameState.currentTrial,
+                    deckSelections: gameState.deckSelections
+                },
+                trials: gameState.trialData
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `iowa_task_${gameState.demographics.name}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

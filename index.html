@@ -267,9 +267,9 @@
                 <ul>
                     <li><strong>Goal:</strong> Win as much money as possible</li>
                     <li><strong>How to play:</strong> Click on a deck to select it</li>
-                    <li>Each card selection will result in a win and possibly a loss</li>
+                    <li>Each card selection may result in a win, loss, or both</li>
                     <li>Some decks are better than others in the long run</li>
-                    <li>You will play 40 trials</li>
+                    <li>You will play 10 trials</li>
                 </ul>
                 <p>Click "Start" when you're ready to begin.</p>
             </div>
@@ -279,7 +279,7 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
             <div class="trial-info">
-                Trial: <span id="trial-number">1</span> / 5
+                Trial: <span id="trial-number">1</span> / 10
             </div>
             
             <div class="game-area">
@@ -349,19 +349,19 @@
         const schedules = {
             deckA: {
                 wins: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-                losses: [0, 0, -150, 0, -300, 0, 0, -200, 0, -250, -350, 0, 0, -250, -200, 0, 0, -300, -150, 0, -250, -200, 0, 0, -350, 0, -200, -300, 0, 0, -250, 0, 0, -200, -150, 0, -300, 0, -350, -250]
+                losses: [-250, -250, -250, 0, 0, 0, -250, 0, 0, -250, 0, 0, 0, -250, -200, 0, 0, -300, -150, 0, -250, -200, 0, 0, -350, 0, -200, -300, 0, 0, -250, 0, 0, -200, -150, 0, -300, 0, -350, -250]
             },
             deckB: {
                 wins: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],
-                losses: [0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250]
+                losses: [0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1250]
             },
             deckC: {
                 wins: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
-                losses: [0, 0, -50, 0, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0]
+                losses: [0, 0, -50, 0, -50, 0, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0, 0, 0, 0, -50, 0, 0, 0, -50, 0, 0, 0, 0, 0]
             },
             deckD: {
                 wins: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
-                losses: [0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0]
+                losses: [0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, -250, 0, 0, 0, 0]
             }
         };
 
@@ -440,8 +440,8 @@
             const deckName = deckNames[deckIndex];
             const selectionCount = gameState.deckSelections[deckIndex];
             
-            const win = schedules[deckName].wins[selectionCount % 5];
-            const loss = schedules[deckName].losses[selectionCount % 5];
+            const win = schedules[deckName].wins[selectionCount % 10];
+            const loss = schedules[deckName].losses[selectionCount % 10];
             const net = win + loss;
             
             gameState.deckSelections[deckIndex]++;
@@ -477,7 +477,7 @@
                 document.getElementById('fixation').style.display = 'block';
                 
                 setTimeout(() => {
-                    if (gameState.currentTrial < 5) {
+                    if (gameState.currentTrial < 10) {
                         startTrial();
                     } else {
                         endTask();
